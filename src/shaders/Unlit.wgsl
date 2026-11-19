@@ -3,6 +3,7 @@ struct VertexInput {
     @location(1) normal: vec3f,
     @location(2) uv: vec2f,
     @location(3) tangent: vec3f,
+    @location(6) color: vec3f,
 }
 
 struct SkinnedVertexInput {
@@ -11,12 +12,14 @@ struct SkinnedVertexInput {
     @location(2) uv: vec2f,
     @location(3) tangent: vec3f,
     @location(4) joints: vec4u,
-    @location(5) weights: vec4f
+    @location(5) weights: vec4f,
+    @location(6) color: vec3f,
 }
 
 struct VertexOutput {
    @builtin(position) position: vec4f, 
    @location(0) uv: vec2f,
+   @location(1) color: vec3f
 }
 
 struct Camera {
@@ -42,6 +45,7 @@ fn vertex(input:VertexInput) -> VertexOutput {
     var output: VertexOutput;
     output.position = position;
     output.uv = input.uv;
+    output.color = input.color;
     return output;
 }
 
@@ -56,10 +60,13 @@ fn vertexSkinned(input: SkinnedVertexInput) -> VertexOutput {
     var output: VertexOutput;
     output.position = camera.projection * camera.view * model.matrix * skin * vec4f(input.position, 1.0);
     output.uv = input.uv;
+    output.color = input.color;
     return output;
 }
 
 @fragment
 fn fragment(input: VertexOutput) -> @location(0) vec4f {
-    return textureSample(baseTexture, textureSampler, input.uv);
+    let tex = textureSample(baseTexture, textureSampler, input.uv);
+    let color = pow(input.color, vec3f(1.0 / 2.2));  // linear → screen (gamma)
+    return vec4f(tex.rgb * color, tex.a);
 }

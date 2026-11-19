@@ -20,10 +20,22 @@
         padding: 0;
         display: block;
       }
+      #fps {
+          position: fixed;      /* stays in the corner, on top of the canvas */
+          top: 8px;
+          left: 8px;
+          padding: 4px 8px;
+          font: 14px monospace;
+          color: white;
+          background: rgba(0, 0, 0, 0.5);   /* semi-transparent black box */
+          border-radius: 4px;
+          pointer-events: none; /* clicks go through it to the game (for mouse lock) */
+      }
     </style>
   </head>
   <body>
     <canvas id="canvas"></canvas>
+    <div id="fps">FPS: --</div>
     <script type="importmap">
       {
         "imports": {

@@ -62,7 +62,9 @@ function _createMeshBuffer(state: RenderState, entity: Entity) {
             // This could cause an error
             // if primitive.indices.byteLength is not a multiple of 4
             primitive.indexBuffer = state.device.createBuffer({
-                size: primitive.indices.byteLength,
+                size: Math.ceil(primitive.indices.byteLength / 4) * 4,
+                 // dunes ima indicies po dva byta webgpu pa sprejme 
+                 // tiste ki so večkratnik  štiri
                 usage: GPUBufferUsage.COPY_DST | GPUBufferUsage.INDEX
             });
         

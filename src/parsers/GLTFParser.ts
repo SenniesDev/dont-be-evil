@@ -315,6 +315,10 @@ export class GLTFParser {
 
         // Optional attributes
 
+        const colors = primitive.attributes['COLOR_0'] !== undefined
+        ? await this.parseAccessor(primitive.attributes['COLOR_0'])
+        : null;
+
         const normals = primitive.attributes['NORMAL'] !== undefined
             ? await this.parseAccessor(primitive.attributes['NORMAL'])
             : null;
@@ -337,9 +341,9 @@ export class GLTFParser {
         
         // Into a single 
         
-        const vertices = new Float32Array(vertexCount * 11);
+        const vertices = new Float32Array(vertexCount * 14);
         for (let i = 0; i < vertexCount; i++) {
-            const vertexStart = i * 11;
+            const vertexStart = i * 14;
             
             for (let c = 0; c < 3; c++) {
                 vertices[vertexStart + c] = positions.data[i * positions.numComponents + c];
@@ -358,6 +362,10 @@ export class GLTFParser {
                 for (let c = 0; c < 3; c++) {
                     vertices[vertexStart + 8 + c] = tangents.data[i * tangents.numComponents + c];
                 }
+            }
+            for(let c = 0; c < 3 ; c++){
+                vertices[vertexStart + 11 + c] = colors 
+                ? colors.data[i * colors.numComponents + c] : 1.0; // default joint values
             }
         }
 

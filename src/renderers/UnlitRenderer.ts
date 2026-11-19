@@ -118,7 +118,7 @@ export class UnlitRenderer {
             code: shaderCode
         });
         const vertexLayout: GPUVertexBufferLayout = {
-            arrayStride: 44,
+            arrayStride: 56, // 14 * 4 bytes per vertex
             attributes: [
                 {
                     shaderLocation: 0,  // Position
@@ -140,6 +140,11 @@ export class UnlitRenderer {
                     format: 'float32x3',
                     offset: 32,
                 },
+                {
+                    shaderLocation: 6,
+                    format: 'float32x3',
+                    offset: 44,
+                }
             ],
         };
         this.pipeline = renderState.device.createRenderPipeline({

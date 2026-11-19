@@ -18,7 +18,7 @@ export function render(state: RenderState, scene: Scene) {
             view: canvasTexture.createView(),
             loadOp: 'clear',
             storeOp: 'store',
-            clearValue: [0.3, 0.6, 0.8, 1.0]
+            clearValue: [0.1, 0.1, 0.2, 1.0]
         }],
         depthStencilAttachment: {
             view: depthView,

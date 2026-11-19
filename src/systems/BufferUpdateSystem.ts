@@ -55,8 +55,15 @@ export function _writeMeshBuffers(state: RenderState, entity: Entity) {
                 console.warn("Vertex buffer not initialized!");
             }
         
-            if (primitive.indexBuffer) {
-                state.device.queue.writeBuffer(primitive.indexBuffer, 0, primitive.indices);
+            if (primitive.indexBuffer) { 
+                // ko je stevilo indexov neparno se dodado ena 0 oz padding
+                let indices = primitive.indices;
+                if(indices.byteLength % 4 !== 0){
+                    const padded = new Uint16Array(indices.length + 1);
+                    padded.set(indices);
+                    indices = padded;
+                }
+                state.device.queue.writeBuffer(primitive.indexBuffer, 0, indices);
             } else {
                 console.warn("Index buffer not initialized!");
             }
