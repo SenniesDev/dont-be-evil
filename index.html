@@ -31,10 +31,101 @@
           border-radius: 4px;
           pointer-events: none; /* clicks go through it to the game (for mouse lock) */
       }
+      #start-screen {
+          position: fixed;
+          inset: 0;
+          z-index: 10;
+          background-image: url("data/textures/startScreen.png");   /* your picture */
+          background-size: cover;                   /* covers the whole screen, no stretching */
+          background-position: center;
+          font-family: Arial, sans-serif;
+          color: white;
+      }
+
+      /* menu bottom left, like in your example */
+      #menu {
+          position: absolute;
+          left: 8%;
+          bottom: 15%;
+          width: 320px;
+          display: flex;
+          flex-direction: column;
+          gap: 3px;
+      }
+
+      .menu-title {
+          background: rgba(60, 60, 60, 0.85);
+          padding: 6px 12px;
+          font-size: 24px;
+          letter-spacing: 1px;
+          margin-bottom: 6px;
+      }
+      .menu-title-small {
+          font-size: 14px;
+          margin: 14px 0 3px;
+      }
+
+      /* START button: white, with a black bar on the left */
+      .menu-item {
+          text-align: left;
+          padding: 6px 12px;
+          font-size: 18px;
+          font-family: inherit;
+          letter-spacing: 1px;
+          background: white;
+          color: black;
+          border: none;
+          border-left: 6px solid black;
+          border-radius: 0;
+          cursor: pointer;
+      }
+      .menu-item:hover {
+          background: #ddd;
+      }
+      .menu-item:disabled {
+          background: rgba(120, 120, 120, 0.8);
+          color: #ccc;
+          cursor: wait;
+      }
+
+      /* control rows: semi-transparent grey bars */
+      .menu-row {
+          display: flex;
+          justify-content: space-between;   /* key on the left, description on the right */
+          background: rgba(110, 110, 110, 0.7);
+          padding: 3px 12px;
+          font-size: 13px;
+          letter-spacing: 1px;
+      }
+
+      /* hint bottom right */
+      #menu-hint {
+          position: absolute;
+          right: 5%;
+          bottom: 6%;
+          font-size: 14px;
+          opacity: 0.85;
+      }
     </style>
   </head>
   <body>
     <canvas id="canvas"></canvas>
+        <div id="start-screen">
+      <div id="menu">
+        <div class="menu-title">MAIN MENU</div>
+
+        <button id="play-button" class="menu-item" disabled>Nalaganje…</button>
+
+        <div class="menu-title menu-title-small">KONTROLE</div>
+        <div class="menu-row"><span>W A S D</span><span>premikanje</span></div>
+        <div class="menu-row"><span>SHIFT</span><span>tek</span></div>
+        <div class="menu-row"><span>SPACE</span><span>skok</span></div>
+        <div class="menu-row"><span>MIŠKA</span><span>razgled</span></div>
+        <div class="menu-row"><span>ESC</span><span>sprosti miško</span></div>
+      </div>
+
+      <div id="menu-hint">ENTER / KLIK &nbsp;Start</div>
+    </div>
     <div id="fps">FPS: --</div>
     <script type="importmap">
       {

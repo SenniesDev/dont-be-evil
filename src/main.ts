@@ -9,11 +9,11 @@ import { GLTFParser } from "./parsers/GLTFParser.ts";
 import { Camera } from "./components/Camera.ts";
 import { computeSkins } from "./systems/SkinningSystem.ts";
 import type { Entity } from "./Entity.ts";
-import { isKeyDown, consumeMouseDX, consumeMouseDY } from "./systems/InputSystem.ts";
 import { loadTerrain, getGroundHeight, isOnTerrain } from "./game/Terrain.ts";
 import { loadPlayer, updatePlayer, getPlayerPosition, getPlayerYaw } from "./game/Player.ts";
 import { setupCamera, updateCamera } from "./game/CameraController.ts";
 import { updateFps } from "./game/FpsCounter.ts";
+import { setupStartScreen, isGameStarted } from "./game/StartScreen.ts";
 
 
 // ------ Create sample scene ------ //
@@ -69,7 +69,6 @@ await loadPlayer(scene);
 setupCamera(scene);
 
 // ------ Initalize GPU/Rendering specific interfaces ------ //
-
 if (!navigator.gpu) {
     throw Error("WebGPU not supported in this browser!");
 }
@@ -93,17 +92,14 @@ const renderState = new RenderState(gpuDevice, canvas);
 
 
 // ------ Create and write all buffers ------ //
-
 createBuffers(renderState, scene);
 
 
 // ------ Prepare pipelines ------ //
-
 await prepareRendering(renderState, scene);
 
 
 // ------ Events ------ //
-
 function resize() {
     if (!canvas) {
         return;
@@ -132,17 +128,12 @@ resize();
 
 
 // ------ Start game loop ------ //
-
 let lastTime = performance.now();
-
-
-
 
 function update(timestamp: number) {
     if (!scene) {
         return;
     }
-
 
     const dt = (timestamp - lastTime) / 1000;
     lastTime = timestamp;
@@ -151,7 +142,9 @@ function update(timestamp: number) {
     updateFps(dt);
 
     // --- igralec ---
-    updatePlayer(dt);
+    if(isGameStarted()) {
+        updatePlayer(dt);
+    }
     updateCamera();
 
     // --- animacije ---
@@ -166,4 +159,5 @@ function update(timestamp: number) {
 
 }
 
+setupStartScreen(canvas);
 requestAnimationFrame(update);
