@@ -1,0 +1,30 @@
+Core mechanics: (rough order - may change with time)
+Movement mechanics (WASD) DONE
+- WASD Movement
+- space Jump
+- Left shift + WASD sprint
+- mouseDX/DY look around
+
+Collisions (edge of map etc.)
+- Wlaking on the model of dunes
+
+Collectible items (extension of collisions)
+
+HUD elements (item counter, timer)
+- FPS counter 
+
+Camera implementation (follows player - either just directionally from fixed point or with actual camera position) DONE
+- Folows a player 
+
+Quicktime events (Captcha etc.)
+Start / end screen
+ NEXT
+
+Optimizations & overall polish
+
+Additional / optionals / would-like-to-dos:
+X1. Keybinds (restart, force win, force loss etc.)
+X2. Cutscenes
+X3. Map clutter/obstacles (objects the character can bump into)
+X4. Additional lighting / shader effects
+X5. Randomization of item spawn locations
