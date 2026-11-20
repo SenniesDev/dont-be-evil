@@ -12,7 +12,7 @@ import { KeyframeAnimations } from "./components/KeyframeAnimation.ts";
 import { vec3, quat } from "gl-matrix";
 import { Transform, TransformType } from "./components/Transform.ts";
 import type { Entity } from "./Entity.ts";
-import { isKeyDown, consumeMouseDX } from "./systems/InputSystem.ts";
+import { isKeyDown, consumeMouseDX, consumeMouseDY } from "./systems/InputSystem.ts";
 import { Mesh } from "./components/Mesh.ts";
 import { BasicMaterial } from "./data/Material.ts";
 
@@ -76,6 +76,7 @@ const dunesTransform = dunes.getComponent(Transform)!;
 dunesTransform.scale = vec3.fromValues(0.01, 0.01, 0.01);
 dunesTransform.location =vec3.fromValues(0, 0, 0);
 
+// zracuna kje je nad in kje je pod skratka kje se lčahko hodi in kje ne
 computeTransforms(scene);
 
 const FLOATS_PER_VERTEX = 14;
@@ -137,6 +138,10 @@ const playerTransform = player.getComponent(Transform)!;
 playerTransform.location = vec3.fromValues(0, 0, 0);
 playerTransform.scale = vec3.fromValues(0.5, 0.5, 0.5);
 let playerYaw = 0;                       // direction he faces (radians)
+
+let cameraPitch = 0.4; /// omejiotve premika kamere
+const MIN_PITCH = -0.2;
+const MAX_PITCH = 1.3;
 
 const IDLE = 'HumanArmature|Man_Idle';
 const WALK = 'HumanArmature|Man_Walk';
@@ -262,6 +267,8 @@ function update(timestamp: number) {
 
     const mouseSensitivity = 0.003;
     playerYaw -= consumeMouseDX() * mouseSensitivity;
+    cameraPitch += consumeMouseDY() * mouseSensitivity;
+    cameraPitch = Math.max(MIN_PITCH, Math.min(MAX_PITCH, cameraPitch));
 
     // --- player movement (W/S = forward/back, A/D = turn) ---
     // --- player movement (W/S = forward/back, A/D = sideways) ---
@@ -323,15 +330,24 @@ function update(timestamp: number) {
 
     // --- follow camera (behind and above the player) ---
     const camDistance = 4;
-    const camHeight = 2;
     const p = playerTransform.location;
-    cameraTransform.location = vec3.fromValues(
-        p[0] - forward[0] * camDistance,
-        p[1] + camHeight,
-        p[2] - forward[2] * camDistance
-    );
-    cameraTransform.target = vec3.fromValues(p[0], p[1] + 1, p[2]); // look at his chest, not his feet
+    const target = vec3.fromValues(p[0], p[1] + 1, p[2]);   // his chest
 
+    const horizontal = Math.cos(cameraPitch) * camDistance;  // how far behind
+    const vertical   = Math.sin(cameraPitch) * camDistance;  // how high above the chest
+
+    cameraTransform.location = vec3.fromValues(
+        target[0] - forward[0] * horizontal,
+        target[1] + vertical,
+        target[2] - forward[2] * horizontal
+    );
+    cameraTransform.target = target;
+
+    const camLoc = cameraTransform.location;
+    const minY = getGroundHeight(camLoc[0], camLoc[2]) + 0.5;
+    if(camLoc[1] < minY){
+        cameraTransform.location = vec3.fromValues(camLoc[0], minY, camLoc[2]);
+    }
 
     animateScene(scene, dt);
     computeTransforms(scene);
