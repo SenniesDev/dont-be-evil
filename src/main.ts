@@ -14,6 +14,8 @@ import { loadPlayer, updatePlayer, getPlayerPosition, getPlayerYaw } from "./gam
 import { setupCamera, updateCamera } from "./game/CameraController.ts";
 import { updateFps } from "./game/FpsCounter.ts";
 import { setupStartScreen, isGameStarted } from "./game/StartScreen.ts";
+import { loadTokens, updateTokens } from "./game/dataToken.ts";
+import { updateTimer, isTimeUp } from "./game/Timer.ts";
 
 
 // ------ Create sample scene ------ //
@@ -61,6 +63,10 @@ if (littleGuy) {
 
 //---------Load the Dunes---------//
 await loadTerrain(scene);
+
+//--------Load the tokens--------//
+
+await loadTokens(scene);
 
 // ------ Load the man (.glb) ------ //
 await loadPlayer(scene);
@@ -142,8 +148,10 @@ function update(timestamp: number) {
     updateFps(dt);
 
     // --- igralec ---
-    if(isGameStarted()) {
+    if(isGameStarted() && !isTimeUp()) {
         updatePlayer(dt);
+        updateTokens(dt);
+        updateTimer(dt);
     }
     updateCamera();
 

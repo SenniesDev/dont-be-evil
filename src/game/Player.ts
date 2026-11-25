@@ -13,10 +13,10 @@ const WALK = 'HumanArmature|Man_Walk';
 const RUN  = 'HumanArmature|Man_Run';
 const JUMP = 'HumanArmature|Man_Jump';
 
-const WALK_SPEED = 2;
-const RUN_SPEED = 5;
+const WALK_SPEED = 5;
+const RUN_SPEED = 10;
 const JUMP_SPEED = 6;          // hitrost skoka gor
-const GRAVITY = 15;            // kako hitro pade nazaj dol
+const GRAVITY =10;            // kako hitro pade nazaj dol
 const MOUSE_SENSITIVITY = 0.003;
 
 // ------ Stanje igralca (samo za to datoteko) ------ //
