@@ -7,7 +7,7 @@ import { getGroundHeight } from "./Terrain.ts";
 import { getPlayerPosition, getPlayerYaw } from "./Player.ts";
 
 // ------ Nastavitve ------ //
-const CAM_DISTANCE = 4;            // razdalja kamere od igralca
+const CAM_DISTANCE = 10;            // razdalja kamere od igralca
 const CHEST_HEIGHT = 1;            // kamera gleda v prsi, ne v noge
 const MIN_PITCH = -0.2;            // malo pod igralcem
 const MAX_PITCH = 1.3;             // skoraj od zgoraj (~75°)
@@ -28,7 +28,7 @@ export function setupCamera(scene: Scene) {
     cameraTransform.up = vec3.fromValues(0, 1, 0);          // glTF je Y-up
 
     const camera = cameraEntity.getComponent(Camera)!;
-    camera.fovy = Math.PI / 3;     // 60°
+    camera.fovy = 75 * Math.PI / 180;     // 60°
     camera.far = 1000;             // vidi do 1000 enot daleč
 }
 
