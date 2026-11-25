@@ -10,15 +10,19 @@ Collisions (edge of map etc.)
 - Cant go of the map(edge map)
 
 Collectible items (extension of collisions)
+- collectible tokens 
 
 HUD elements (item counter, timer)
 - FPS counter 
+- timer
 
 Camera implementation (follows player - either just directionally from fixed point or with actual camera position) DONE
 - Folows a player 
 
 Quicktime events (Captcha etc.)
 Start / end screen
+start screnn
+
  NEXT
 
 Optimizations & overall polish

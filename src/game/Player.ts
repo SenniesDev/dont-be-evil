@@ -18,6 +18,9 @@ const RUN_SPEED = 10;
 const JUMP_SPEED = 6;          // hitrost skoka gor
 const GRAVITY =10;            // kako hitro pade nazaj dol
 const MOUSE_SENSITIVITY = 0.003;
+const MAX_SLOPE_DEG = 35; // najbolj strmo kar lahko prehodi 
+const MAX_SLOPE= Math.tan(MAX_SLOPE_DEG * Math.PI / 180);
+const PROBE = 0.5 // koliko naprej merimo 
 
 // ------ Stanje igralca (samo za to datoteko) ------ //
 let scene: Scene;
@@ -52,6 +55,19 @@ function setAnimation(name: string) {
     currentAnim = name;
 }
 
+
+function tooSteep(fromX: number, fromZ: number, toX: number, toZ:number): boolean {
+    const dx = toX - fromX;
+    const dz = toZ - fromZ;
+    const dist = Math.hypot(dx, dz);
+    if(dist === 0) return false;  // ne premika se ni klanca
+
+    const aheadX = fromX + (dx / dist) * PROBE;
+    const aheadZ = fromZ + (dz / dist) * PROBE;
+
+    const rise = getGroundHeight(aheadX, aheadZ) - getGroundHeight(fromX,fromZ)
+    return rise/PROBE > MAX_SLOPE;
+}
 // Pokliče se vsako sličico: miška, gibanje, skok, animacija
 export function updatePlayer(dt: number) {
     // --- obračanje z miško (levo/desno) ---
@@ -84,6 +100,12 @@ export function updatePlayer(dt: number) {
         // X in Z preverimo posebej, da drsi ob robu, namesto da se zatakne
         if (!isOnTerrain(newX, loc[2])) newX = loc[0];
         if (!isOnTerrain(newX, newZ))   newZ = loc[2];
+
+        // prestermo navzgor ta korak ne velja 
+        if(tooSteep(loc[0], loc[2], newX, newZ)){
+            newX = loc[0];
+            newZ = loc[2];
+        }
 
         playerTransform.location = vec3.fromValues(newX, loc[1], newZ);
     }
