@@ -16,6 +16,7 @@ import { updateFps } from "./game/FpsCounter.ts";
 import { setupStartScreen, isGameStarted } from "./game/StartScreen.ts";
 import { loadTokens, updateTokens } from "./game/dataToken.ts";
 import { updateTimer, isTimeUp } from "./game/Timer.ts";
+import { loadObstacle } from "./game/Obstacles.ts";
 
 
 // ------ Create sample scene ------ //
@@ -64,6 +65,7 @@ if (littleGuy) {
 //---------Load the Dunes---------//
 await loadTerrain(scene);
 
+await loadObstacle(scene, "data/token.gltf", 0, 12, 1.5);
 //--------Load the tokens--------//
 
 await loadTokens(scene);

@@ -7,7 +7,8 @@ import { isKeyDown, consumeMouseDX } from "../systems/InputSystem.ts";
 import { loadGlb } from "./loadGlb.ts";
 import { getGroundHeight, isOnTerrain } from "./Terrain.ts";
 import { computeTransforms } from "../systems/TransformSystem.ts";
-import { getPlayerPosition } from "./Player.ts";
+import { getPlayerCapsule } from "./Player.ts";
+import { sphereVsCapsule } from "./Collisions.ts";
 import { stopTimer } from "./Timer.ts";
 
 
@@ -21,8 +22,8 @@ const MAX_TRIES = 100;
 
 const tokens: Entity[] = [];
 
-const PICKUP_RAD = 1.5 // kako blizu more igralec priti da collecta token 
-const SPIN_SPEED = 2 // kako hitro se token vrti 
+const TOKEN_RADIUS = TOKEN_SCALE * Math.sqrt(3)// kako blizu more igralec priti da collecta token 
+const SPIN_SPEED = 2 // kako hitro se token vrti DODAJANJE 
 
 let tokenScene : Scene;    // Scene za odstranjevanje tokenov
 let collected = 0; // koliko tokenov ima player
@@ -86,30 +87,28 @@ function randomPosition(): vec3[] {
     return result;
 }
 
-export function updateTokens(dt: number) {
-    const p = getPlayerPosition(); // dobi igralčevo pozicijo vec3(X; Y Z)(leco/desno, visina, naprej, nazaj)
+export function updateTokens(dt: number) { 
+    const player =  getPlayerCapsule();
 
-    for(let i  = tokens.length - 1 ; i >= 0; i--){//nazaj ker odstranjujemo elemente iz seznama 
+    for(let i = tokens.length - 1; i >= 0 ; i--){
         const token = tokens[i];
         const loc = token.getComponent(Transform)!.location;
 
-        // razdalje med igralcem in zetonom (p je polozaj igralcevih nog)
-        const dx = loc[0] - p[0];
-        const dy = loc[1] - p[1]; // +1 ce hocem da se racuna blizina njegovih prsi 
-        const dz = loc[2] - p[2];
+        const sphereToken = { center: loc, radius: TOKEN_RADIUS};
 
-        if(Math.hypot(dx, dy, dz) < PICKUP_RAD){
-            tokenScene.removeEntity(token); // se ne rise vec
+        if(sphereVsCapsule(sphereToken, player)){
+            tokenScene.removeEntity(token);
             tokens.splice(i, 1);
             collected++;
-            updateCounter();
+            updateCounter;
 
             if(collected === total){
-                console.log("ALL TOKENS COLLECTED");
+                console.log("VSI TOKENI SO POBRANI")
                 stopTimer();
             }
         }
-    }    
+    }
+  
 }
 
 function updateCounter() {

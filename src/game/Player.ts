@@ -2,25 +2,24 @@ import { vec3, quat } from "gl-matrix";
 import type { Scene } from "../Scene.ts";
 import type { Entity } from "../Entity.ts";
 import { Transform } from "../components/Transform.ts";
-import { playAnimation, pauseAnimation, resetAnimation } from "../systems/AnimationSystem.ts";
 import { isKeyDown, consumeMouseDX } from "../systems/InputSystem.ts";
 import { loadGlb } from "./loadGlb.ts";
 import { getGroundHeight, isOnTerrain } from "./Terrain.ts";
-
+import type { Capsule, AABB } from "./Collisions.ts";
+import { aabbVsAabb, pushOutXZ } from "./Collisions.ts";
+import { getObstacles } from "./Obstacles.ts";
 // ------ Nastavitve ------ //
-const IDLE = 'HumanArmature|Man_Idle';
-const WALK = 'HumanArmature|Man_Walk';
-const RUN  = 'HumanArmature|Man_Run';
-const JUMP = 'HumanArmature|Man_Jump';
 
-const WALK_SPEED = 5;
-const RUN_SPEED = 10;
-const JUMP_SPEED = 6;          // hitrost skoka gor
-const GRAVITY =10;            // kako hitro pade nazaj dol
-const MOUSE_SENSITIVITY = 0.003;
+const WALK_SPEED = 15;
+const TURN_SPEED = 5;
+const RUN_SPEED = 25;
+const JUMP_SPEED = 25;          // hitrost skoka gor
+const GRAVITY = 50;            // kako hitro pade nazaj dol
 const MAX_SLOPE_DEG = 35; // najbolj strmo kar lahko prehodi 
 const MAX_SLOPE= Math.tan(MAX_SLOPE_DEG * Math.PI / 180);
 const PROBE = 0.5 // koliko naprej merimo 
+const PLAYER_RADIUS = 0.9;
+const PLAYER_HEIGHT = 2.5;
 
 // ------ Stanje igralca (samo za to datoteko) ------ //
 let scene: Scene;
@@ -29,31 +28,22 @@ let playerTransform: Transform;
 let yaw = 0;                   // smer, v katero gleda (radiani)
 let velocityY = 0;             // trenutna hitrost skoka
 let onGround = true;
-let currentAnim = IDLE;
 
 // Naloži možička in ga postavi na začetek
-export async function loadPlayer(s: Scene) {
+export async function loadPlayer(s: Scene){
     scene = s;
-    await loadGlb("data/man.glb", scene);
+    const entities = await loadGlb("data/dino.gltf", scene);
 
-    const root = scene.getEntityByName('RootNode');
-    if (!root) throw Error("No player 'RootNode' in scene!");
+    const root = entities.find((e) => e.parent === null);
+
+    if(!root) throw Error("dino.gltf has no root object");
     player = root;
 
     playerTransform = player.getComponent(Transform)!;
     playerTransform.location = vec3.fromValues(0, 0, 0);
-    playerTransform.scale = vec3.fromValues(0.5, 0.5, 0.5);
-
-    playAnimation(scene, player, IDLE);
+    playerTransform.scale = vec3.fromValues(1,1,1);
 }
 
-function setAnimation(name: string) {
-    if (name === currentAnim) return;
-    pauseAnimation(scene, player, currentAnim);
-    resetAnimation(scene, player, name);
-    playAnimation(scene, player, name);
-    currentAnim = name;
-}
 
 
 function tooSteep(fromX: number, fromZ: number, toX: number, toZ:number): boolean {
@@ -68,46 +58,46 @@ function tooSteep(fromX: number, fromZ: number, toX: number, toZ:number): boolea
     const rise = getGroundHeight(aheadX, aheadZ) - getGroundHeight(fromX,fromZ)
     return rise/PROBE > MAX_SLOPE;
 }
+
 // Pokliče se vsako sličico: miška, gibanje, skok, animacija
 export function updatePlayer(dt: number) {
-    // --- obračanje z miško (levo/desno) ---
-    yaw -= consumeMouseDX() * MOUSE_SENSITIVITY;
+    //-------turning with A/D--------------//
+    if(isKeyDown("KeyA")) yaw += TURN_SPEED * dt;
+    if(isKeyDown("KeyD")) yaw -= TURN_SPEED * dt;
 
-    // --- smer premikanja ---
+    //--------speed : Shift = faster ------//
     const isRunning = isKeyDown("ShiftLeft");
     const moveSpeed = isRunning ? RUN_SPEED : WALK_SPEED;
 
+    //-------- always forward in the direction he is facin ------//
     const forward = vec3.fromValues(Math.sin(yaw), 0, Math.cos(yaw));
-    const right   = vec3.fromValues(-Math.cos(yaw), 0, Math.sin(yaw));
+    const step = moveSpeed * dt;
+    const loc = playerTransform.location
 
-    const move = vec3.create();
-    if (isKeyDown("KeyW")) vec3.add(move, move, forward);
-    if (isKeyDown("KeyS")) vec3.sub(move, move, forward);
-    if (isKeyDown("KeyD")) vec3.add(move, move, right);
-    if (isKeyDown("KeyA")) vec3.sub(move, move, right);
+    let newX = loc[0] + forward[0] * step;
+    let newZ = loc[2] + forward[2] * step;
 
-    const isMoving = vec3.length(move) > 0;
+    //------ X in z preverimo posebej , da drsi ob robu, namesto da se zatakne 
+    if(!isOnTerrain(newX, loc[2])) newX = loc[0];
+    if(!isOnTerrain(newX, newZ)) newZ = loc[2];
 
-    // --- horizontalno premikanje (samo po dunah) ---
-    if (isMoving) {
-        vec3.normalize(move, move);
-        const step = moveSpeed * dt;
-        const loc = playerTransform.location;
+    //----- toSteep korak ne velja
 
-        let newX = loc[0] + move[0] * step;
-        let newZ = loc[2] + move[2] * step;
+    if(tooSteep(loc[0], loc[2], newX, newZ)){
+        newX = loc[0];
+        newZ = loc[2];
+    }
 
-        // X in Z preverimo posebej, da drsi ob robu, namesto da se zatakne
-        if (!isOnTerrain(newX, loc[2])) newX = loc[0];
-        if (!isOnTerrain(newX, newZ))   newZ = loc[2];
+    playerTransform.location = vec3.fromValues(newX, loc[1], newZ);
 
-        // prestermo navzgor ta korak ne velja 
-        if(tooSteep(loc[0], loc[2], newX, newZ)){
-            newX = loc[0];
-            newZ = loc[2];
+        // --- trki z ovirami: AABB proti AABB, odziv = razmik ---
+    for (const box of getObstacles()) {
+        const me = getPlayerAABB();
+        if (aabbVsAabb(me, box)) {
+            const [pushX, pushZ] = pushOutXZ(me, box);
+            const l = playerTransform.location;
+            playerTransform.location = vec3.fromValues(l[0] + pushX, l[1], l[2] + pushZ);
         }
-
-        playerTransform.location = vec3.fromValues(newX, loc[1], newZ);
     }
 
     // --- skakanje in višina tal ---
@@ -116,12 +106,12 @@ export function updatePlayer(dt: number) {
         onGround = false;
     }
 
-    const loc = playerTransform.location;
-    const groundY = getGroundHeight(loc[0], loc[2]);
+    const loc2 = playerTransform.location;
+    const groundY = getGroundHeight(loc2[0], loc2[2]);
 
     if (onGround) {
         // hoja: noge vedno na površini dun
-        playerTransform.location = vec3.fromValues(loc[0], groundY, loc[2]);
+        playerTransform.location = vec3.fromValues(loc2[0], groundY, loc2[2]);
     } else {
         // v zraku: gravitacija in pristanek, ko doseže tla
         velocityY -= GRAVITY * dt;
@@ -131,16 +121,9 @@ export function updatePlayer(dt: number) {
             velocityY = 0;
             onGround = true;
         }
-        playerTransform.location = vec3.fromValues(loc[0], y, loc[2]);
+        playerTransform.location = vec3.fromValues(loc2[0], y, loc2[2]);
     }
-
-    // --- animacija ---
-    if (!onGround)                  setAnimation(JUMP);
-    else if (isMoving && isRunning) setAnimation(RUN);
-    else if (isMoving)              setAnimation(WALK);
-    else                            setAnimation(IDLE);
-
-    playerTransform.rotation = quat.setAxisAngle(quat.create(), [0, 1, 0], yaw);
+    playerTransform.rotation = quat.setAxisAngle(quat.create(), [0, 1, 0], yaw - Math.PI/2);
 }
 
 // Kamera rabi te podatke, da ve, kam naj gleda
@@ -150,4 +133,24 @@ export function getPlayerPosition() {
 
 export function getPlayerYaw() {
     return yaw;
+}
+
+export function getPlayerCapsule(): Capsule {
+    const p = playerTransform.location;
+    return{
+        x: p[0],
+        z: p[2],
+        bottomY: p[1] + PLAYER_RADIUS,
+        topY: p[1] + PLAYER_HEIGHT - PLAYER_RADIUS,
+        radius: PLAYER_RADIUS
+    }
+}
+
+// AABB igralca: škatla okoli njegove kapsule
+function getPlayerAABB(): AABB {
+    const p = playerTransform.location;
+    return {
+        min: vec3.fromValues(p[0] - PLAYER_RADIUS, p[1],                 p[2] - PLAYER_RADIUS),
+        max: vec3.fromValues(p[0] + PLAYER_RADIUS, p[1] + PLAYER_HEIGHT, p[2] + PLAYER_RADIUS),
+    };
 }
