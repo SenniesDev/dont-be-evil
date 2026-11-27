@@ -43,3 +43,14 @@ function formatTime(seconds: number): string {
     const ss = s < 10 ? "0" + s : "" + s;
     return `${mm}:${ss}`;
 }
+
+// Za novo igro: poln čas
+export function resetTimer() {
+    remaining = TIME_LIMIT;
+    running = true;
+    timeUp = false;
+    if (timerElement) {
+        timerElement.textContent = `Čas: ${formatTime(remaining)}`;
+        timerElement.style.color = "white";
+    }
+}

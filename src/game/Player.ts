@@ -10,9 +10,9 @@ import { aabbVsAabb, pushOutXZ } from "./Collisions.ts";
 import { getObstacles } from "./Obstacles.ts";
 // ------ Nastavitve ------ //
 
-const WALK_SPEED = 15;
+const WALK_SPEED = 25;
 const TURN_SPEED = 5;
-const RUN_SPEED = 25;
+const RUN_SPEED = 35;
 const JUMP_SPEED = 25;          // hitrost skoka gor
 const GRAVITY = 50;            // kako hitro pade nazaj dol
 const MAX_SLOPE_DEG = 35; // najbolj strmo kar lahko prehodi 
@@ -147,10 +147,19 @@ export function getPlayerCapsule(): Capsule {
 }
 
 // AABB igralca: škatla okoli njegove kapsule
-function getPlayerAABB(): AABB {
+export function getPlayerAABB(): AABB {
     const p = playerTransform.location;
     return {
         min: vec3.fromValues(p[0] - PLAYER_RADIUS, p[1],                 p[2] - PLAYER_RADIUS),
         max: vec3.fromValues(p[0] + PLAYER_RADIUS, p[1] + PLAYER_HEIGHT, p[2] + PLAYER_RADIUS),
     };
+}
+
+// Za novo igro: dino nazaj na začetek
+export function resetPlayer() {
+    yaw = 0;
+    velocityY = 0;
+    onGround = true;
+    playerTransform.location = vec3.fromValues(0, getGroundHeight(0, 0), 0);
+    playerTransform.rotation = quat.setAxisAngle(quat.create(), [0, 1, 0], yaw - Math.PI / 2);
 }

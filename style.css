@@ -121,3 +121,40 @@
           font-size: 14px;
           opacity: 0.85;
       }
+      #end-screen {
+    position: fixed;
+    inset: 0;
+    display: none;                      /* skrit, dokler igra ne konča */
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.75);
+    z-index: 20;                        /* nad vsem, tudi nad HUD-om */
+    font-family: Arial, sans-serif;
+    color: white;
+}
+#end-card {
+    background: black;
+    border: 3px solid white;
+    padding: 40px 56px;
+    width: 90%;
+    max-width: 600px;
+    text-align: center;
+}
+#end-title {
+    margin: 0 0 20px;
+    font-size: 40px;
+    letter-spacing: 3px;
+    color: #e04040;                     /* poraz = rdeče */
+}
+#end-screen.won #end-title {
+    color: #40d040;                     /* zmaga = zeleno */
+}
+#end-text {
+    font-size: 18px;
+    line-height: 1.6;
+    white-space: pre-line;              /* \n v besedilu = nova vrstica */
+}
+#restart-button {
+    margin-top: 24px;
+    padding: 12px 40px;
+}

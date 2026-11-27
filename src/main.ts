@@ -10,13 +10,15 @@ import { Camera } from "./components/Camera.ts";
 import { computeSkins } from "./systems/SkinningSystem.ts";
 import type { Entity } from "./Entity.ts";
 import { loadTerrain, getGroundHeight, isOnTerrain } from "./game/Terrain.ts";
-import { loadPlayer, updatePlayer, getPlayerPosition, getPlayerYaw } from "./game/Player.ts";
+import { loadPlayer, updatePlayer, getPlayerPosition, getPlayerYaw, resetPlayer } from "./game/Player.ts";
 import { setupCamera, updateCamera } from "./game/CameraController.ts";
 import { updateFps } from "./game/FpsCounter.ts";
 import { setupStartScreen, isGameStarted } from "./game/StartScreen.ts";
-import { loadTokens, updateTokens } from "./game/dataToken.ts";
-import { updateTimer, isTimeUp } from "./game/Timer.ts";
+import { loadTokens, updateTokens, resetTokens, allTokensCollected, getCollected, getTotal } from "./game/dataToken.ts";
+import { updateTimer, isTimeUp, resetTimer } from "./game/Timer.ts";
 import { loadObstacle } from "./game/Obstacles.ts";
+import { loadCacti, touchingCactus } from "./game/Cactus.ts";
+import { showEndScreen, setupEndScreen, isGameOver } from "./game/EndScreen.ts";
 
 
 // ------ Create sample scene ------ //
@@ -61,14 +63,18 @@ if (littleGuy) {
         scene.removeEntity(e);
     }
 }
+// ------ Remove the old floor from little_guy.gltf ------ //
+const oldFloor = scene.getEntityByName('Ravnina.004');
+if (oldFloor) scene.removeEntity(oldFloor);
 
 //---------Load the Dunes---------//
 await loadTerrain(scene);
 
-await loadObstacle(scene, "data/token.gltf", 0, 12, 1.5);
 //--------Load the tokens--------//
 
 await loadTokens(scene);
+
+await loadCacti(scene);
 
 // ------ Load the man (.glb) ------ //
 await loadPlayer(scene);
@@ -150,10 +156,20 @@ function update(timestamp: number) {
     updateFps(dt);
 
     // --- igralec ---
-    if(isGameStarted() && !isTimeUp()) {
+    if (isGameStarted() && !isGameOver()) {
         updatePlayer(dt);
         updateTokens(dt);
         updateTimer(dt);
+
+        const score = `Pobrani žetoni: ${getCollected()} / ${getTotal()}`;
+
+        if (touchingCactus()) {
+            showEndScreen(false, `Zaletel si se v kaktus.\n${score}`);
+        } else if (isTimeUp()) {
+            showEndScreen(false, `Uporabnik se je odjavil in internet je izginil.\nDobil si tožbo za 425 milijonov evrov.\n${score}`);
+        } else if (allTokensCollected()) {
+            showEndScreen(true, `Zbral si celoten digitalni profil uporabnika.\nGoogle ti je hvaležen.\n${score}`);
+        }
     }
     updateCamera();
 
@@ -164,10 +180,14 @@ function update(timestamp: number) {
     updateBuffers(renderState, scene);
 
     render(renderState, scene);
-
     requestAnimationFrame(update);
 
 }
 
 setupStartScreen(canvas);
+setupEndScreen(canvas, () => {
+    resetPlayer();
+    resetTokens();
+    resetTimer();
+});
 requestAnimationFrame(update);

@@ -1,5 +1,5 @@
 import { vec3 } from "gl-matrix";
-import type { Scene } from "../Scene.ts";
+import { Scene } from "../Scene.js";
 import type { Entity } from "../Entity.ts";
 import { Transform } from "../components/Transform.ts";
 import { Mesh } from "../components/Mesh.ts";
@@ -12,23 +12,29 @@ const FLOATS_PER_VERTEX = 14;      // enako kot v Terrain.ts
 const obstacles: AABB[] = [];      // AABB vseh ovir (statične, izračunamo enkrat)
 
 // Naloži model kot oviro, ga postavi na tla v (x, z) in izračuna njegov AABB
-export async function loadObstacle(scene: Scene, path: string, x: number, z: number, scale: number) {
+//Promise je async funkcija ki vrne AABB
+export async function placeModel(scene: Scene, path: string, x:number , z:number, scale: number) : Promise<AABB> {
     const entities = await loadGlb(path, scene);
     const root = entities.find((e) => e.parent === null);
-    if (!root) throw Error(`${path} has no root object!`);
+    if(!root) throw("kaktus has no root object");
 
     const t = root.getComponent(Transform)!;
     t.scale = vec3.fromValues(scale, scale, scale);
     t.location = vec3.fromValues(x, 0, z);
     computeTransforms(scene);
 
-    // dno modela postavimo točno na pesek
+    // dno modela postavimo na pesek
     const before = computeAABB(entities);
     const lift = getGroundHeight(x, z) - before.min[1];
     t.location = vec3.fromValues(x, lift, z);
     computeTransforms(scene);
 
-    obstacles.push(computeAABB(entities));
+    return computeAABB(entities)
+}
+
+//Ovira: dino se vanjo zaleti in se odrine
+export async function loadObstacle(scene: Scene, path: string, x:number, z: number, scale:number){
+    obstacles.push(await placeModel(scene, path, x, z, scale));
 }
 
 // AABB iz vseh oglišč modela v svetovnih koordinatah

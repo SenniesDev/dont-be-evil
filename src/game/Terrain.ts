@@ -146,3 +146,12 @@ export function isOnTerrain(x: number, z: number): boolean {
     }
     return false;
 }
+
+// Naključna točka (x, z) kjerkoli na terenu, z odmikom od roba
+export function randomPointOnMap(margin: number): [number, number] {
+    const maxX = gridMinX + gridCols * CELL_SIZE;
+    const maxZ = gridMinZ + gridRows * CELL_SIZE;
+    const x = gridMinX + margin + Math.random() * (maxX - gridMinX - 2 * margin);
+    const z = gridMinZ + margin + Math.random() * (maxZ - gridMinZ - 2 * margin);
+    return [x, z];
+}

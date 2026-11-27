@@ -5,22 +5,26 @@ import { Transform } from "../components/Transform.ts";
 import { playAnimation, pauseAnimation, resetAnimation } from "../systems/AnimationSystem.ts";
 import { isKeyDown, consumeMouseDX } from "../systems/InputSystem.ts";
 import { loadGlb } from "./loadGlb.ts";
-import { getGroundHeight, isOnTerrain } from "./Terrain.ts";
+import { getGroundHeight, isOnTerrain, randomPointOnMap } from "./Terrain.ts";
 import { computeTransforms } from "../systems/TransformSystem.ts";
 import { getPlayerCapsule } from "./Player.ts";
 import { sphereVsCapsule } from "./Collisions.ts";
 import { stopTimer } from "./Timer.ts";
 
 
-const NUM_TOKENS = 3;
+
+
 const TOKEN_SCALE = 0.3;
 const FLOATING = 1.0;
-const SPAWN_RAD = 60;
+const NUM_TOKENS = 16;
+const MAP_MARGIN = 15;          // tokens not too close to the map edge
 const MIN_DIST_PALYER = 9;
-const MIN_DIST_TOKENS = 10; 
-const MAX_TRIES = 100;
+const MIN_DIST_TOKENS = 40;     // far apart → spread over the whole map
+const MAX_TRIES = 2000;
 
 const tokens: Entity[] = [];
+const allTokens: Entity[] = [];
+
 
 const TOKEN_RADIUS = TOKEN_SCALE * Math.sqrt(3)// kako blizu more igralec priti da collecta token 
 const SPIN_SPEED = 2 // kako hitro se token vrti DODAJANJE 
@@ -48,6 +52,7 @@ export async function loadTokens(scene: Scene) {
         tokenTransform.location = pos;
 
         tokens.push(token);
+        allTokens.push(token);
     }
 
     console.log(`Placed ${tokens.length} tokens`);
@@ -62,8 +67,7 @@ function randomPosition(): vec3[] {
     const result: vec3[] = [];
 
     for(let tries = 0; tries < MAX_TRIES && result.length < NUM_TOKENS; tries++){
-        const x = (Math.random() * 2 - 1) * SPAWN_RAD;
-        const z = (Math.random() * 2 - 1) * SPAWN_RAD;
+        const[x, z] = randomPointOnMap(MAP_MARGIN);
 
         if(!isOnTerrain(x, z)) continue;
         if(Math.hypot(x, z) < MIN_DIST_PALYER) continue;
@@ -100,7 +104,7 @@ export function updateTokens(dt: number) {
             tokenScene.removeEntity(token);
             tokens.splice(i, 1);
             collected++;
-            updateCounter;
+            updateCounter();
 
             if(collected === total){
                 console.log("VSI TOKENI SO POBRANI")
@@ -117,4 +121,28 @@ function updateCounter() {
 
 export function getCollected() {
     return collected;
+}
+
+// za druge datotek zetoni ki se nniso pobrani
+export function getTokens(){
+    return tokens;
+}
+
+// Za novo igro: vsi žetoni nazaj v sceno, števec na 0
+export function resetTokens() {
+    for (const t of allTokens) {
+        if (tokens.indexOf(t) === -1) tokenScene.addEntity(t);   // not among the active ones → add it back   // pobrane vrnemo v sceno
+    }
+    tokens.length = 0;              // izprazni seznam aktivnih
+    tokens.push(...allTokens);      // in vanj daj vse
+    collected = 0;
+    updateCounter();
+}
+
+export function allTokensCollected() {
+    return total > 0 && collected === total;
+}
+
+export function getTotal() {
+    return total;
 }
