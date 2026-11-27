@@ -158,3 +158,62 @@
     margin-top: 24px;
     padding: 12px 40px;
 }
+#popup {
+    position: fixed;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 15;                    /* nad igro in HUD-om, pod končnim zaslonom (20) */
+}
+#popup-card {
+    background: white;              /* izgleda kot prava spletna stran */
+    color: #222;
+    font-family: Arial, sans-serif;
+    padding: 24px 32px;
+    width: 90%;
+    max-width: 460px;
+    border-radius: 6px;
+    text-align: center;
+}
+#popup-card h2 { margin: 0 0 12px; }
+#popup-card button {
+    margin: 8px 4px 0;
+    padding: 10px 24px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    background: #1a73e8;
+    color: white;
+    cursor: pointer;
+}
+#popup-card button:disabled { background: #aaa; cursor: not-allowed; }
+#popup-card .popup-secondary { background: #ddd; color: #444; }
+.popup-scroll {
+    height: 120px;
+    overflow-y: auto;               /* drsnik za dolgo besedilo */
+    border: 1px solid #ccc;
+    padding: 8px;
+    margin: 8px 0;
+    font-size: 12px;
+    text-align: left;
+    color: #666;
+}
+.captcha-code {
+    font: bold 32px monospace;
+    letter-spacing: 8px;
+    background: #eee;
+    padding: 8px;
+    margin: 8px 0;
+    text-decoration: line-through;  /* "zmešana" koda kot pri pravi captchi */
+    user-select: none;              /* kode ni mogoče kopirati */
+}
+#pp-input {
+    font: 20px monospace;
+    padding: 6px;
+    width: 140px;
+    text-align: center;
+    text-transform: uppercase;
+}
+.popup-msg { color: #d93025; min-height: 1.2em; margin: 8px 0 0; }

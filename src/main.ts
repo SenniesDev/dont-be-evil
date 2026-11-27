@@ -3,7 +3,7 @@ import { updateBuffers } from "./systems/BufferUpdateSystem.ts";
 import { prepareRendering } from "./systems/PrepareRenderSystem.ts";
 import { render } from "./systems/RenderSystem.ts";
 import { computeTransforms } from "./systems/TransformSystem.ts";
-import { animate as animateScene, playAnimation, pauseAnimation, resetAnimation } from "./systems/AnimationSystem.ts";
+import { animate as animateScene} from "./systems/AnimationSystem.ts";
 import { createBuffers } from "./systems/BufferInitSystem.ts";
 import { GLTFParser } from "./parsers/GLTFParser.ts";
 import { Camera } from "./components/Camera.ts";
@@ -15,10 +15,10 @@ import { setupCamera, updateCamera } from "./game/CameraController.ts";
 import { updateFps } from "./game/FpsCounter.ts";
 import { setupStartScreen, isGameStarted } from "./game/StartScreen.ts";
 import { loadTokens, updateTokens, resetTokens, allTokensCollected, getCollected, getTotal } from "./game/dataToken.ts";
-import { updateTimer, isTimeUp, resetTimer } from "./game/Timer.ts";
-import { loadObstacle } from "./game/Obstacles.ts";
+import { updateTimer, isTimeUp, resetTimer } from "./game/Timer.ts"
 import { loadCacti, touchingCactus } from "./game/Cactus.ts";
 import { showEndScreen, setupEndScreen, isGameOver } from "./game/EndScreen.ts";
+import { setupPopups, updatePopups, isPopupOpen, resetPopups } from "./game/Popups.ts";
 
 
 // ------ Create sample scene ------ //
@@ -157,8 +157,12 @@ function update(timestamp: number) {
 
     // --- igralec ---
     if (isGameStarted() && !isGameOver()) {
-        updatePlayer(dt);
-        updateTokens(dt);
+        updatePopups(dt);
+
+        if(!isPopupOpen()){
+            updatePlayer(dt);
+            updateTokens(dt);
+        }
         updateTimer(dt);
 
         const score = `Pobrani žetoni: ${getCollected()} / ${getTotal()}`;
@@ -189,5 +193,6 @@ setupEndScreen(canvas, () => {
     resetPlayer();
     resetTokens();
     resetTimer();
+    resetPopups();
 });
 requestAnimationFrame(update);
